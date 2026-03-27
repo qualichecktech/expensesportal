@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Qualicheck — EXPENSES PORTAL</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Helvetica, Arial, sans-serif; background: #f5f0ff; color: #1a1a1a; min-height: 100vh; font-size: 15px; }
+
+  /* ── ANIMATIONS ── */
+  @keyframes spin       { to { transform: rotate(360deg); } }
+  @keyframes fadeInUp   { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeInDown { from { opacity: 0; transform: translateY(-18px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes slideInRight { from { opacity: 0; transform: translateX(22px); } to { opacity: 1; transform: translateX(0); } }
+  @keyframes popIn      { from { opacity: 0; transform: scale(0.88); } to { opacity: 1; transform: scale(1); } }
+  @keyframes shimmer    { 0%,100% { opacity: 1; } 50% { opacity: 0.45; } }
+  @keyframes pulse-ring { 0% { box-shadow: 0 0 0 0 rgba(111,45,189,0.25); } 70% { box-shadow: 0 0 0 9px rgba(111,45,189,0); } 100% { box-shadow: 0 0 0 0 rgba(111,45,189,0); } }
+  @keyframes recordPop  { 0% { opacity:0; transform:translateY(-10px) scale(0.97); } 100% { opacity:1; transform:translateY(0) scale(1); } }
+
+  /* ── HEADER ── */
+  .header {
+    background: linear-gradient(90deg, #5a1faa 0%, #6F2DBD 60%, #8E44EC 100%);
+    height: 62px; display: flex; align-items: center; justify-content: space-between;
+    padding: 0 36px; position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 3px 18px rgba(111,45,189,0.35);
+    transition: box-shadow 0.3s;
+  }
+  .header-logo { display: flex; align-items: center; gap: 13px; color: #fff; animation: fadeInDown 0.5s ease both; }
+  .header-logo-icon { width: 45px; height: 45px; background: transparent; border-radius: 9px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .header-logo-icon img { width: 45px; height: 45px; object-fit: contain; display: block; }
+  .header-logo-name { font-size: 21px; font-weight: 700; }
+  .header-logo-sub  { font-size: 12px; opacity: 0.7; margin-top: 1px; }
+  .logout-btn {
+    background: rgba(255,255,255,0.15); border: 1.5px solid rgba(255,255,255,0.35);
+    border-radius: 8px; color: #fff; font-family: Helvetica, Arial, sans-serif;
+    font-size: 14px; font-weight: 700; padding: 8px 20px; cursor: pointer;
+    display: none; align-items: center; gap: 7px;
+    transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+  }
+  .logout-btn:hover { background: rgba(255,255,255,0.28); transform: translateY(-1px); box-shadow: 0 3px 12px rgba(0,0,0,0.15); }
+  .logout-btn:active { transform: translateY(0); }
+  .logout-btn.visible { display: flex; animation: fadeInDown 0.35s ease both; }
+
+  .page { display: none; }
+  .page.active { display: flex; }
+
+  /* ── LOGIN ── */
+  #page-login { min-height: calc(100vh - 62px); align-items: center; justify-content: center; background: #f5f0ff; }
+  .login-card {
+    background: #fff; border: 1.5px solid #e2d5f8; border-radius: 18px;
+    padding: 50px 46px 46px; width: 100%; max-width: 430px;
+    box-shadow: 0 8px 40px rgba(111,45,189,0.13);
+    animation: popIn 0.45s cubic-bezier(.34,1.56,.64,1) both;
+  }
+  .login-logo { text-align: center; margin-bottom: 34px; }
+  .login-logo-icon { width: 90px; height: 90px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 14px; overflow: hidden; }
+  .login-logo-icon img { width: 90px; height: 90px; object-fit: contain; display: block; }
+  .login-logo h1 { font-size: 28px; font-weight: 700; }
+  .login-logo p  { font-size: 14px; color: #888; margin-top: 4px; }
+  .form-group { margin-bottom: 22px; }
+  .form-group label { display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: #555; margin-bottom: 8px; }
+  .input-wrap { position: relative; }
+  .input-wrap input {
+    width: 100%; padding: 13px 14px 13px 44px;
+    border: 1.5px solid #ddd; border-radius: 9px;
+    font-family: Helvetica, Arial, sans-serif; font-size: 16px; color: #1a1a1a;
+    outline: none; transition: border-color 0.25s, box-shadow 0.25s, transform 0.15s;
+  }
+  .input-wrap input:focus { border-color: #6F2DBD; box-shadow: 0 0 0 3px rgba(111,45,189,0.12); }
+  .inp-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #bbb; pointer-events: none; transition: color 0.2s; }
+  .input-wrap:focus-within .inp-icon { color: #6F2DBD; }
+  .eye-btn { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #bbb; padding: 3px; display: flex; align-items: center; transition: color 0.2s; }
+  .eye-btn:hover { color: #6F2DBD; }
+  .btn-login {
+    width: 100%; padding: 15px;
+    background: linear-gradient(135deg, #6F2DBD 0%, #8E44EC 100%);
+    border: none; border-radius: 10px; color: #fff;
+    font-family: Helvetica, Arial, sans-serif; font-size: 17px; font-weight: 700;
+    cursor: pointer; transition: filter 0.2s, transform 0.15s, box-shadow 0.2s;
+    box-shadow: 0 4px 18px rgba(111,45,189,0.3);
+  }
+  .btn-login:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-1px); box-shadow: 0 7px 22px rgba(111,45,189,0.35); }
+  .btn-login:active:not(:disabled) { transform: translateY(0); filter: brightness(0.96); }
+  .btn-login:disabled { opacity: 0.5; cursor: not-allowed; }
+  .error-msg { font-size: 13px; color: #d63031; margin-top: 8px; display: none; align-items: center; gap: 5px; animation: fadeInUp 0.25s ease; }
+  .error-msg.show { display: flex; }
+
+  /* ── MAIN ── */
+  #page-main { flex-direction: column; min-height: calc(100vh - 62px); }
+  .main-body { display: grid; grid-template-columns: 1fr 420px; gap: 28px; padding: 32px 36px; max-width: 1340px; margin: 0 auto; width: 100%; }
+
+  .sec-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.8px; color: #6F2DBD; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; animation: fadeInDown 0.4s ease both; }
+  .sec-label::after { content:''; flex:1; height:1.5px; background: linear-gradient(90deg, #e0d0f7, transparent); }
+
+  /* ── FORM ── */
+  .form-card {
+    background: #fff; border: 1.5px solid #e8e1f7; border-radius: 16px;
+    padding: 28px 28px 24px;
+    box-shadow: 0 3px 20px rgba(111,45,189,0.08);
+    animation: fadeInUp 0.45s ease both;
+    transition: box-shadow 0.3s;
+  }
+  .form-card:hover { box-shadow: 0 6px 28px rgba(111,45,189,0.12); }
+
+  .field { margin-bottom: 18px; }
+  .field label { display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #555; margin-bottom: 7px; transition: color 0.2s; }
+  .field:focus-within label { color: #6F2DBD; }
+  .field input, .field select, .field textarea {
+    width: 100%; padding: 11px 13px;
+    border: 1.5px solid #ddd; border-radius: 9px;
+    font-family: Helvetica, Arial, sans-serif; font-size: 15px; color: #1a1a1a;
+    background: #fff; outline: none;
+    transition: border-color 0.25s, box-shadow 0.25s, background 0.2s;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus {
+    border-color: #6F2DBD; box-shadow: 0 0 0 3px rgba(111,45,189,0.1); background: #fdfaff;
+  }
+  .field textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+
+  .field-optional { font-weight: 400; text-transform: none; letter-spacing: 0; color: #bbb; font-size: 11px; }
+
+  .amount-wrap { position: relative; }
+  .amount-prefix { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); font-size: 16px; font-weight: 700; color: #6F2DBD; pointer-events: none; }
+  .amount-wrap input { padding-left: 28px; font-size: 20px; font-weight: 700; color: #6F2DBD; }
+
+  .field-row   { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .field-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+
+  /* Category select with icon spacing */
+  .field select option { padding: 6px; }
+
+  /* Running total bar */
+  .running-total-bar {
+    background: linear-gradient(135deg, #f3ecff, #ede6fa);
+    border: 1.5px solid #d5bff5; border-radius: 10px;
+    padding: 12px 18px; display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 18px; transition: all 0.3s;
+  }
+  .running-total-bar .rt-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #8E44EC; }
+  .running-total-bar .rt-val { font-size: 22px; font-weight: 700; color: #6F2DBD; transition: color 0.3s; }
+
+  .btn-record {
+    width: 100%; padding: 15px;
+    background: linear-gradient(135deg, #1a7d34 0%, #1e8c3a 100%);
+    border: none; border-radius: 10px; color: #fff;
+    font-family: Helvetica, Arial, sans-serif; font-size: 17px; font-weight: 700;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: filter 0.2s, transform 0.15s, box-shadow 0.2s;
+    box-shadow: 0 4px 18px rgba(30,140,58,0.3); margin-top: 6px;
+  }
+  .btn-record:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(30,140,58,0.35); animation: pulse-ring 1.2s infinite; }
+  .btn-record:active:not(:disabled) { transform: translateY(0); filter: brightness(0.95); }
+  .btn-record:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  /* ── RECORDS PANEL ── */
+  .records-card {
+    background: #fff; border: 1.5px solid #e8e1f7; border-radius: 16px;
+    box-shadow: 0 3px 20px rgba(111,45,189,0.08);
+    display: flex; flex-direction: column; max-height: calc(100vh - 130px);
+    position: sticky; top: 90px;
+    animation: slideInRight 0.5s ease both;
+  }
+  .records-head { padding: 18px 20px 12px; border-bottom: 1.5px solid #f0eafa; flex-shrink: 0; }
+  .records-head h2 { font-size: 17px; font-weight: 700; margin-bottom: 2px; }
+  .records-head p  { font-size: 13px; color: #888; }
+  .records-head p span { color: #6F2DBD; font-weight: 700; }
+
+  .records-filters { padding: 10px 12px; border-bottom: 1px solid #f0eafa; flex-shrink: 0; display: flex; gap: 8px; }
+  .records-filters select, .records-filters input[type="date"] {
+    flex: 1; padding: 7px 10px; border: 1.5px solid #ddd; border-radius: 7px;
+    font-family: Helvetica, Arial, sans-serif; font-size: 12px; color: #1a1a1a; background: #fff;
+    outline: none; cursor: pointer; transition: border-color 0.2s;
+  }
+  .records-filters select:focus, .records-filters input[type="date"]:focus { border-color: #6F2DBD; }
+  .records-filters input[type="date"] { flex: 1.2; }
+
+  .records-scroll { flex: 1; overflow-y: auto; padding: 10px 12px 12px; }
+  .records-scroll::-webkit-scrollbar { width: 4px; }
+  .records-scroll::-webkit-scrollbar-thumb { background: #c9b3eb; border-radius: 4px; }
+
+  .rec-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 50px 20px; gap: 10px; text-align: center; color: #bbb; font-size: 14px; animation: fadeInUp 0.4s ease; }
+
+  .rec-item {
+    background: #faf7ff; border: 1.5px solid #ede6fa; border-radius: 11px;
+    padding: 12px 14px; margin-bottom: 7px;
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+    animation: recordPop 0.3s cubic-bezier(.34,1.56,.64,1) both;
+  }
+  .rec-item:hover { border-color: #b89ee8; box-shadow: 0 4px 14px rgba(111,45,189,0.1); transform: translateX(3px); }
+  .rec-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+  .rec-reason { font-size: 13px; font-weight: 700; color: #1a1a1a; flex: 1; line-height: 1.4; }
+  .rec-amount { font-size: 16px; font-weight: 700; color: #1e8c3a; white-space: nowrap; flex-shrink: 0; }
+  .rec-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 3px; }
+  .rec-date { font-size: 11px; color: #aaa; }
+  .rec-by   { font-size: 11px; color: #aaa; }
+  .rec-cat  { font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 20px; display: inline-flex; align-items: center; gap: 4px; }
+
+  /* New category colors */
+  .rec-cat.medical-supplies { background: #e8f4fd; color: #1565c0; }
+  .rec-cat.equipment        { background: #fce4ec; color: #c62828; }
+  .rec-cat.rent             { background: #fff8e1; color: #f57f17; }
+  .rec-cat.utilities        { background: #e3f2fd; color: #0277bd; }
+  .rec-cat.service-invoices { background: #f3e5f5; color: #7b1fa2; }
+  .rec-cat.staffing         { background: #e8f5e9; color: #2e7d32; }
+  .rec-cat.office-supplies  { background: #e0f2f1; color: #00695c; }
+  .rec-cat.transport        { background: #fff3e0; color: #e65100; }
+  .rec-cat.other            { background: #f5f5f5; color: #757575; }
+
+  .rec-notes { font-size: 11px; color: #999; margin-top: 4px; font-style: italic; line-height: 1.4; }
+  .rec-invoice { font-size: 11px; color: #8E44EC; margin-top: 3px; font-weight: 600; }
+
+  .records-footer { padding: 12px 16px; border-top: 1.5px solid #f0eafa; flex-shrink: 0; }
+  .total-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+  .total-row .lbl { font-size: 13px; color: #888; font-weight: 600; }
+  .total-row .val { font-size: 22px; font-weight: 700; color: #6F2DBD; transition: all 0.4s; }
+  .total-row.sub .val { font-size: 14px; color: #aaa; }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: #1a1a1a; color: #fff; padding: 13px 26px; border-radius: 12px;
+    font-size: 14px; font-weight: 600; opacity: 0; pointer-events: none;
+    transition: opacity 0.3s cubic-bezier(.34,1.56,.64,1), transform 0.3s cubic-bezier(.34,1.56,.64,1);
+    z-index: 9999; white-space: nowrap; box-shadow: 0 6px 28px rgba(0,0,0,0.22);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.err { background: linear-gradient(135deg, #c0392b, #e74c3c); }
+  .toast.ok  { background: linear-gradient(135deg, #1a7d34, #1e8c3a); }
+
+  /* ── SPINNER ── */
+  .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.35); border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite; display: inline-block; flex-shrink: 0; }
+
+  /* ── DIVIDER ── */
+  .form-divider { height: 1px; background: linear-gradient(90deg, transparent, #e8e1f7, transparent); margin: 6px 0 20px; }
+
+  @media (max-width: 960px) {
+    .main-body { grid-template-columns: 1fr; padding: 20px 16px; }
+    .records-card { max-height: 520px; position: static; }
+    .field-row-3 { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 600px) {
+    .field-row, .field-row-3 { grid-template-columns: 1fr; }
+    .header { padding: 0 18px; }
+    .header-logo-name { font-size: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-logo">
+    <div class="header-logo-icon">
+      <img src="qc-logo.png" alt="QC Logo" />
+    </div>
+    <div>
+      <div class="header-logo-name">Qualicheck Diagnostic Center</div>
+      <div class="header-logo-sub">Daily Expenses Recorder</div>
+    </div>
+  </div>
+  <button class="logout-btn" id="logout-btn" onclick="doLogout()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    Logout
+  </button>
+</div>
+
+<!-- LOGIN PAGE -->
+<div class="page active" id="page-login">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-icon">
+        <img src="qc-logo-purple.png" alt="QC Logo" />
+      </div>
+      <h1>Expenses Portal</h1>
+      <p>Qualicheck Diagnostic Center</p>
+    </div>
+    <div class="form-group">
+      <label>Username</label>
+      <div class="input-wrap">
+        <span class="inp-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        </span>
+        <input type="text" id="inp-user" placeholder="Enter username" autocomplete="off" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <div class="input-wrap">
+        <span class="inp-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </span>
+        <input type="password" id="inp-pass" placeholder="Enter password" />
+        <button class="eye-btn" onclick="toggleEye()">
+          <svg id="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+      <div class="error-msg" id="login-error">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span id="error-text">Invalid credentials.</span>
+      </div>
+    </div>
+    <button class="btn-login" id="login-btn" onclick="doLogin()"><span id="login-btn-text">Sign In</span></button>
+  </div>
+</div>
+
+<!-- MAIN PAGE -->
+<div class="page" id="page-main">
+  <div class="main-body">
+
+    <!-- LEFT: Form -->
+    <div>
+      <div class="sec-label">Record Expense</div>
+      <div class="form-card">
+
+        <div class="field-row">
+          <div class="field">
+            <label>Date Purchased</label>
+            <input type="date" id="f-date" />
+          </div>
+          <div class="field">
+            <label>Encoded By</label>
+            <input type="text" id="f-encoder" placeholder="Staff name" oninput="this.value=this.value.toUpperCase()" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Amount (₱)</label>
+          <div class="amount-wrap">
+            <span class="amount-prefix">₱</span>
+            <input type="number" id="f-amount" placeholder="0.00" min="0" step="0.01" oninput="updateRunningTotal()" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Category</label>
+          <select id="f-category">
+            <option value="" disabled selected>Select category</option>
+            <option value="medical-supplies">Medical Supplies &amp; Reagents</option>
+            <option value="equipment">Equipment &amp; Maintenance</option>
+            <option value="rent">Rent &amp; Occupancy</option>
+            <option value="utilities">Utilities &amp; Bills</option>
+            <option value="service-invoices">Service Invoices</option>
+            <option value="staffing">Staffing &amp; Professional Fees</option>
+            <option value="office-supplies">Office &amp; Admin Supplies</option>
+            <option value="transport">Transport &amp; Delivery</option>
+            <option value="other">Other / Miscellaneous</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Details / Item Purchased</label>
+          <textarea id="f-details" placeholder="e.g. Reagent kit x5, Printer ink cartridge, Staff allowance…"></textarea>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label>Invoice No. <span class="field-optional">(optional)</span></label>
+            <input type="text" id="f-invoice" placeholder="e.g. INV-2026-001" />
+          </div>
+          <div class="field">
+            <label>Notes <span class="field-optional">(optional)</span></label>
+            <input type="text" id="f-notes" placeholder="Supplier, receipt no., info…" />
+          </div>
+        </div>
+
+        <div class="form-divider"></div>
+
+        <button class="btn-record" id="submit-btn" onclick="submitExpense()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Record Expense
+        </button>
+
+      </div>
+    </div>
+
+    <!-- RIGHT: Records -->
+    <div>
+      <div class="sec-label">Today's Expenses</div>
+      <div class="records-card">
+        <div class="records-head">
+          <h2>Expense Records</h2>
+          <p>Showing <span id="rec-count">0</span> record(s)</p>
+        </div>
+        <div class="records-filters">
+          <input type="date" id="filter-date" onchange="renderRecords()" />
+          <select id="filter-cat" onchange="renderRecords()">
+            <option value="">All Categories</option>
+            <option value="medical-supplies">Medical Supplies &amp; Reagents</option>
+            <option value="equipment">Equipment &amp; Maintenance</option>
+            <option value="rent">Rent &amp; Occupancy</option>
+            <option value="utilities">Utilities &amp; Bills</option>
+            <option value="service-invoices">Service Invoices</option>
+            <option value="staffing">Staffing &amp; Professional Fees</option>
+            <option value="office-supplies">Office &amp; Admin Supplies</option>
+            <option value="transport">Transport &amp; Delivery</option>
+            <option value="other">Other / Miscellaneous</option>
+          </select>
+        </div>
+        <div class="records-scroll" id="records-scroll">
+          <div class="rec-empty">
+            <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#ddd" stroke-width="1.5"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="11" x2="15" y2="11"/><line x1="9" y1="15" x2="13" y2="15"/></svg>
+            <p>No records yet.<br/>Record the first expense.</p>
+          </div>
+        </div>
+        <div class="records-footer">
+          <div class="total-row">
+            <span class="lbl">Filtered Total</span>
+            <span class="val" id="filtered-total">₱ 0.00</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <span id="toast-icon"></span>
+  <span id="toast-msg"></span>
+</div>
+
+<script>
+/* ══════════════════════════════
+   CONFIG — paste your Web App URL
+══════════════════════════════ */
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwvxHeQ6WtMy9rq20rGK9QF567Jzw4povGqHlF6I_yW9l_x4LRHfDKMwJOkH9pteX2l/exec';
+
+/* ══════════════════════════════
+   STATE
+══════════════════════════════ */
+let records = [];
+
+const CAT_LABEL = {
+  'medical-supplies': 'Medical Supplies & Reagents',
+  'equipment':        'Equipment & Maintenance',
+  'rent':             'Rent & Occupancy',
+  'utilities':        'Utilities & Bills',
+  'service-invoices': 'Service Invoices',
+  'staffing':         'Staffing & Professional Fees',
+  'office-supplies':  'Office & Admin Supplies',
+  'transport':        'Transport & Delivery',
+  'other':            'Other / Miscellaneous',
+};
+
+/* Flat SVG icons — single color, no emoji */
+const CAT_ICON = {
+  'medical-supplies': `<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-7 13h-2v-4H6v-2h4V6h2v4h4v2h-4v4z"/></svg>`,
+  'equipment':        `<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 0 1 3.51 15" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M1 14h6v6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M23 10h-6V4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  'rent':             `<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9.5L12 3l9 6.5V21a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><path d="M9 22V12h6v10" fill="white"/></svg>`,
+  'utilities':        `<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>`,
+  'service-invoices': `<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>`,
+  'staffing':         `<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75M21 21v-2a4 4 0 0 0-3-3.87" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>`,
+  'office-supplies':  `<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>`,
+  'transport':        `<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>`,
+  'other':            `<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>`,
+};
+
+/* ══════════════════════════════
+   HELPERS
+══════════════════════════════ */
+function fmtPeso(n) {
+  return '₱ ' + Number(n || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function todayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function fmtDate(str) {
+  if (!str) return '—';
+  const d = new Date(str + 'T00:00:00');
+  return d.toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+function showToast(msg, type='ok') {
+  const el   = document.getElementById('toast');
+  const icon = document.getElementById('toast-icon');
+  document.getElementById('toast-msg').textContent = msg;
+  icon.innerHTML = type === 'ok'
+    ? '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>'
+    : '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+  el.className = 'toast show ' + type;
+  setTimeout(() => el.classList.remove('show'), 3500);
+}
+function updateRunningTotal() {
+  // kept for future running total bar if re-added
+}
+
+/* ══════════════════════════════
+   AUTH
+══════════════════════════════ */
+function doLogin() {
+  const u      = document.getElementById('inp-user').value.trim();
+  const p      = document.getElementById('inp-pass').value.trim();
+  const errEl  = document.getElementById('login-error');
+  const errTxt = document.getElementById('error-text');
+  const btn    = document.getElementById('login-btn');
+  const btnTxt = document.getElementById('login-btn-text');
+
+  errEl.classList.remove('show');
+  if (!u || !p) { errTxt.textContent = 'Please enter username and password.'; errEl.classList.add('show'); return; }
+
+  btn.disabled = true;
+  btnTxt.innerHTML = '<span class="spinner"></span>';
+
+  if (APPS_SCRIPT_URL === 'YOUR_FINANCES_APPS_SCRIPT_URL') {
+    const DEMO = [{ u:'admin', p:'admin2026' }, { u:'cashier', p:'cash@2026' }];
+    setTimeout(() => {
+      const ok = DEMO.find(x => x.u === u && x.p === p);
+      if (ok) { loginSuccess(u); }
+      else { btn.disabled = false; btnTxt.textContent = 'Sign In'; errTxt.textContent = 'Invalid credentials.'; errEl.classList.add('show'); document.getElementById('inp-pass').value = ''; }
+    }, 400);
+    return;
+  }
+
+  fetch(`${APPS_SCRIPT_URL}?action=login&user=${encodeURIComponent(u)}&pass=${encodeURIComponent(p)}`)
+    .then(r => r.json())
+    .then(d => {
+      if (d.success) loginSuccess(u);
+      else {
+        btn.disabled = false; btnTxt.textContent = 'Sign In';
+        errTxt.textContent = d.message || 'Invalid credentials.';
+        errEl.classList.add('show');
+        document.getElementById('inp-pass').value = '';
+      }
+    })
+    .catch(() => { btn.disabled = false; btnTxt.textContent = 'Sign In'; errTxt.textContent = 'Connection error.'; errEl.classList.add('show'); });
+}
+
+function loginSuccess(username) {
+  const loginPage = document.getElementById('page-login');
+  const mainPage  = document.getElementById('page-main');
+  loginPage.style.opacity = '0';
+  loginPage.style.transition = 'opacity 0.3s ease';
+  setTimeout(() => {
+    loginPage.classList.remove('active');
+    loginPage.style.opacity = '';
+    mainPage.classList.add('active');
+    document.getElementById('logout-btn').classList.add('visible');
+    document.getElementById('f-date').value = todayStr();
+    document.getElementById('filter-date').value = todayStr();
+    document.getElementById('f-encoder').value = username.toUpperCase();
+    loadRecords();
+  }, 280);
+}
+
+function doLogout() {
+  records = [];
+  const mainPage  = document.getElementById('page-main');
+  const loginPage = document.getElementById('page-login');
+  mainPage.style.opacity = '0';
+  mainPage.style.transition = 'opacity 0.25s ease';
+  setTimeout(() => {
+    mainPage.classList.remove('active');
+    mainPage.style.opacity = '';
+    loginPage.classList.add('active');
+    document.getElementById('logout-btn').classList.remove('visible');
+    document.getElementById('login-btn').disabled = false;
+    document.getElementById('login-btn-text').textContent = 'Sign In';
+    document.getElementById('login-error').classList.remove('show');
+    document.getElementById('inp-user').value = '';
+    document.getElementById('inp-pass').value = '';
+    renderRecords();
+  }, 230);
+}
+
+function toggleEye() {
+  const inp = document.getElementById('inp-pass'), ico = document.getElementById('eye-icon');
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    ico.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+  } else {
+    inp.type = 'password';
+    ico.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('inp-user').addEventListener('keydown', e => { if (e.key==='Enter') document.getElementById('inp-pass').focus(); });
+  document.getElementById('inp-pass').addEventListener('keydown', e => { if (e.key==='Enter') doLogin(); });
+});
+
+/* ══════════════════════════════
+   LOAD RECORDS
+══════════════════════════════ */
+function loadRecords() {
+  if (APPS_SCRIPT_URL === 'YOUR_FINANCES_APPS_SCRIPT_URL') { records = []; renderRecords(); return; }
+  fetch(`${APPS_SCRIPT_URL}?action=getexpenses`)
+    .then(r => r.json())
+    .then(d => { if (d.success && d.expenses) { records = d.expenses; renderRecords(); } })
+    .catch(() => { records = []; renderRecords(); });
+}
+
+/* ══════════════════════════════
+   RENDER RECORDS
+══════════════════════════════ */
+function renderRecords() {
+  const catF  = document.getElementById('filter-cat')?.value  || '';
+  const dateF = document.getElementById('filter-date')?.value || '';
+
+  const filtered = records.filter(r => {
+    if (catF  && r.category !== catF)  return false;
+    if (dateF && r.date     !== dateF) return false;
+    return true;
+  });
+
+  document.getElementById('rec-count').textContent = filtered.length;
+  const total = filtered.reduce((s,r) => s + (parseFloat(r.amount)||0), 0);
+  document.getElementById('filtered-total').textContent = fmtPeso(total);
+
+  const scroll = document.getElementById('records-scroll');
+  if (!filtered.length) {
+    scroll.innerHTML = `<div class="rec-empty">
+      <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#ddd" stroke-width="1.5"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="11" x2="15" y2="11"/><line x1="9" y1="15" x2="13" y2="15"/></svg>
+      <p>No records found.</p>
+    </div>`;
+    return;
+  }
+
+  scroll.innerHTML = [...filtered].reverse().map((r, idx) => {
+    const cat    = r.category || 'other';
+    const label  = CAT_LABEL[cat] || cat;
+    const icon   = CAT_ICON[cat]  || CAT_ICON['other'];
+    const delay  = Math.min(idx * 40, 400);
+    return `<div class="rec-item" style="animation-delay:${delay}ms">
+      <div class="rec-top">
+        <span class="rec-reason">${r.details || '—'}</span>
+        <span class="rec-amount">${fmtPeso(r.amount)}</span>
+      </div>
+      <div class="rec-meta">
+        <span class="rec-date">${fmtDate(r.date)}</span>
+        <span class="rec-by">· ${r.encoder || '—'}</span>
+        <span class="rec-cat ${cat}">${icon} ${label}</span>
+      </div>
+      ${r.invoice  ? `<div class="rec-invoice">INV: ${r.invoice}</div>` : ''}
+      ${r.notes    ? `<div class="rec-notes">${r.notes}</div>`          : ''}
+    </div>`;
+  }).join('');
+}
+
+/* ══════════════════════════════
+   SUBMIT
+══════════════════════════════ */
+function submitExpense() {
+  const date    = document.getElementById('f-date').value;
+  const encoder = document.getElementById('f-encoder').value.trim().toUpperCase();
+  const amount  = parseFloat(document.getElementById('f-amount').value);
+  const category= document.getElementById('f-category').value;
+  const details = document.getElementById('f-details').value.trim();
+  const invoice = document.getElementById('f-invoice').value.trim();
+  const notes   = document.getElementById('f-notes').value.trim();
+
+  if (!date)                  { showToast('Please select a date.', 'err'); return; }
+  if (!encoder)               { showToast('Please enter who encoded this.', 'err'); return; }
+  if (!amount || amount <= 0) { showToast('Please enter a valid amount greater than 0.', 'err'); return; }
+  if (!category)              { showToast('Please select a category.', 'err'); return; }
+  if (!details)               { showToast('Please enter the item purchased / details.', 'err'); return; }
+
+  const payload = { action: 'addexpense', date, encoder, amount, category, details, invoice, notes };
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Saving…';
+  const resetBtn = () => {
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Record Expense';
+  };
+
+  if (APPS_SCRIPT_URL === 'YOUR_FINANCES_APPS_SCRIPT_URL') {
+    setTimeout(() => {
+      records.push({ ...payload, id: Date.now() });
+      renderRecords(); clearForm(); resetBtn();
+      showToast('Expense recorded! (Demo mode)', 'ok');
+    }, 700);
+    return;
+  }
+
+  fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify(payload),
+  })
+  .then(r => r.json())
+  .then(d => {
+    resetBtn();
+    if (d.success) {
+      records.push({ ...payload, id: d.row });
+      renderRecords(); clearForm();
+      showToast('Expense saved! Row #' + d.row, 'ok');
+    } else {
+      showToast('Error: ' + (d.message || 'Save failed.'), 'err');
+    }
+  })
+  .catch(() => { resetBtn(); showToast('Network error. Check your connection.', 'err'); });
+}
+
+function clearForm() {
+  document.getElementById('f-date').value    = todayStr();
+  document.getElementById('f-amount').value  = '';
+  document.getElementById('f-details').value = '';
+  document.getElementById('f-invoice').value = '';
+  document.getElementById('f-notes').value   = '';
+  // encoder and category intentionally kept for faster repeated entries
+}
+</script>
+</body>
+</html>
