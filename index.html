@@ -2,315 +2,544 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Qualicheck — EXPENSES PORTAL</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Qualicheck — Expenses Portal</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: Helvetica, Arial, sans-serif; background: #f5f0ff; color: #1a1a1a; min-height: 100vh; font-size: 15px; }
 
-  /* ── ANIMATIONS ── */
-  @keyframes spin       { to { transform: rotate(360deg); } }
-  @keyframes fadeInUp   { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
-  @keyframes fadeInDown { from { opacity: 0; transform: translateY(-18px); } to { opacity: 1; transform: translateY(0); } }
-  @keyframes slideInRight { from { opacity: 0; transform: translateX(22px); } to { opacity: 1; transform: translateX(0); } }
-  @keyframes popIn      { from { opacity: 0; transform: scale(0.88); } to { opacity: 1; transform: scale(1); } }
-  @keyframes shimmer    { 0%,100% { opacity: 1; } 50% { opacity: 0.45; } }
-  @keyframes pulse-ring { 0% { box-shadow: 0 0 0 0 rgba(111,45,189,0.25); } 70% { box-shadow: 0 0 0 9px rgba(111,45,189,0); } 100% { box-shadow: 0 0 0 0 rgba(111,45,189,0); } }
-  @keyframes recordPop  { 0% { opacity:0; transform:translateY(-10px) scale(0.97); } 100% { opacity:1; transform:translateY(0) scale(1); } }
+  :root {
+    --purple:      #6F2DBD;
+    --purple-dark: #5a1faa;
+    --purple-lt:   #8E44EC;
+    --green:       #1e8c3a;
+    --green-dark:  #1a7d34;
+    --bg:          #f5f0ff;
+    --white:       #ffffff;
+    --border:      #e8e1f7;
+    --text:        #1a1a1a;
+    --muted:       #888888;
+    --header-h:    60px;
+  }
 
-  /* ── HEADER ── */
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    background: var(--bg); color: var(--text);
+    min-height: 100vh; min-height: 100dvh;
+    font-size: 15px; -webkit-font-smoothing: antialiased;
+  }
+
+  /* ═══ ANIMATIONS ═══ */
+  @keyframes spin         { to { transform: rotate(360deg); } }
+  @keyframes fadeInUp     { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes fadeInDown   { from { opacity:0; transform:translateY(-14px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes slideInRight { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:translateX(0); } }
+  @keyframes popIn        { from { opacity:0; transform:scale(0.91); } to { opacity:1; transform:scale(1); } }
+  @keyframes recordPop    { 0% { opacity:0; transform:translateY(-8px) scale(0.97); } 100% { opacity:1; transform:translateY(0) scale(1); } }
+  @keyframes pulseGreen   {
+    0%   { box-shadow: 0 4px 18px rgba(30,140,58,0.30); }
+    70%  { box-shadow: 0 4px 18px rgba(30,140,58,0.30), 0 0 0 9px rgba(30,140,58,0.00); }
+    100% { box-shadow: 0 4px 18px rgba(30,140,58,0.30); }
+  }
+
+  /* ═══ HEADER ═══ */
   .header {
-    background: linear-gradient(90deg, #5a1faa 0%, #6F2DBD 60%, #8E44EC 100%);
-    height: 62px; display: flex; align-items: center; justify-content: space-between;
-    padding: 0 36px; position: sticky; top: 0; z-index: 100;
+    background: linear-gradient(90deg, var(--purple-dark) 0%, var(--purple) 55%, var(--purple-lt) 100%);
+    height: var(--header-h);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 28px;
+    padding-left:  max(28px, env(safe-area-inset-left));
+    padding-right: max(28px, env(safe-area-inset-right));
+    position: sticky; top: 0; z-index: 200;
     box-shadow: 0 3px 18px rgba(111,45,189,0.35);
-    transition: box-shadow 0.3s;
   }
-  .header-logo { display: flex; align-items: center; gap: 13px; color: #fff; animation: fadeInDown 0.5s ease both; }
-  .header-logo-icon { width: 45px; height: 45px; background: transparent; border-radius: 9px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-  .header-logo-icon img { width: 45px; height: 45px; object-fit: contain; display: block; }
-  .header-logo-name { font-size: 21px; font-weight: 700; }
-  .header-logo-sub  { font-size: 12px; opacity: 0.7; margin-top: 1px; }
+  .header-logo {
+    display: flex; align-items: center; gap: 11px; color: #fff;
+    animation: fadeInDown 0.5s ease both; min-width: 0; overflow: hidden;
+  }
+  .header-logo-icon {
+    width: 38px; height: 38px; flex-shrink: 0;
+    border-radius: 8px; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .header-logo-icon img { width: 38px; height: 38px; object-fit: contain; display: block; }
+
+  /* Full name (tablet+) vs short name (mobile) — toggled via CSS */
+  .logo-full  { display: block; }
+  .logo-short { display: none; }
+  .logo-full, .logo-short { font-size: 19px; font-weight: 700; white-space: nowrap; line-height: 1.2; }
+  .header-logo-sub { font-size: 11.5px; opacity: 0.75; margin-top: 1px; white-space: nowrap; }
+
   .logout-btn {
-    background: rgba(255,255,255,0.15); border: 1.5px solid rgba(255,255,255,0.35);
-    border-radius: 8px; color: #fff; font-family: Helvetica, Arial, sans-serif;
-    font-size: 14px; font-weight: 700; padding: 8px 20px; cursor: pointer;
-    display: none; align-items: center; gap: 7px;
+    background: rgba(255,255,255,0.15);
+    border: 1.5px solid rgba(255,255,255,0.35);
+    border-radius: 8px; color: #fff;
+    font-family: inherit; font-size: 13px; font-weight: 700;
+    padding: 7px 16px; cursor: pointer; flex-shrink: 0;
+    display: none; align-items: center; gap: 6px; white-space: nowrap;
     transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+    touch-action: manipulation;
   }
-  .logout-btn:hover { background: rgba(255,255,255,0.28); transform: translateY(-1px); box-shadow: 0 3px 12px rgba(0,0,0,0.15); }
+  .logout-btn:hover  { background: rgba(255,255,255,0.28); transform: translateY(-1px); box-shadow: 0 3px 10px rgba(0,0,0,0.15); }
   .logout-btn:active { transform: translateY(0); }
   .logout-btn.visible { display: flex; animation: fadeInDown 0.35s ease both; }
+  .logout-label { display: inline; }
 
+  /* ═══ PAGE SYSTEM ═══ */
   .page { display: none; }
   .page.active { display: flex; }
 
-  /* ── LOGIN ── */
-  #page-login { min-height: calc(100vh - 62px); align-items: center; justify-content: center; background: #f5f0ff; }
+  /* ═══ LOGIN PAGE ═══ */
+  #page-login {
+    min-height: calc(100vh - var(--header-h));
+    min-height: calc(100dvh - var(--header-h));
+    align-items: center; justify-content: center;
+    padding: 28px 16px;
+  }
   .login-card {
-    background: #fff; border: 1.5px solid #e2d5f8; border-radius: 18px;
-    padding: 50px 46px 46px; width: 100%; max-width: 430px;
-    box-shadow: 0 8px 40px rgba(111,45,189,0.13);
+    background: var(--white);
+    border: 1.5px solid #e2d5f8;
+    border-radius: 20px;
+    padding: 46px 42px 42px;
+    width: 100%; max-width: 420px;
+    box-shadow: 0 8px 48px rgba(111,45,189,0.13);
     animation: popIn 0.45s cubic-bezier(.34,1.56,.64,1) both;
   }
-  .login-logo { text-align: center; margin-bottom: 34px; }
-  .login-logo-icon { width: 90px; height: 90px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 14px; overflow: hidden; }
-  .login-logo-icon img { width: 90px; height: 90px; object-fit: contain; display: block; }
-  .login-logo h1 { font-size: 28px; font-weight: 700; }
-  .login-logo p  { font-size: 14px; color: #888; margin-top: 4px; }
-  .form-group { margin-bottom: 22px; }
-  .form-group label { display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: #555; margin-bottom: 8px; }
+  .login-logo { text-align: center; margin-bottom: 32px; }
+  .login-logo-icon {
+    width: 82px; height: 82px;
+    display: inline-flex; align-items: center; justify-content: center;
+    margin-bottom: 16px; overflow: hidden;
+  }
+  .login-logo-icon img { width: 82px; height: 82px; object-fit: contain; display: block; }
+  .login-logo h1 { font-size: 26px; font-weight: 700; color: var(--text); }
+  .login-logo p  {
+    font-size: 13.5px; color: var(--muted);
+    margin-top: 9px; line-height: 1.6;
+    max-width: 290px; margin-left: auto; margin-right: auto;
+  }
+
+  .form-group { margin-bottom: 20px; }
+  .form-group label {
+    display: block; font-size: 11.5px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.6px;
+    color: #555; margin-bottom: 8px;
+  }
   .input-wrap { position: relative; }
   .input-wrap input {
     width: 100%; padding: 13px 14px 13px 44px;
-    border: 1.5px solid #ddd; border-radius: 9px;
-    font-family: Helvetica, Arial, sans-serif; font-size: 16px; color: #1a1a1a;
-    outline: none; transition: border-color 0.25s, box-shadow 0.25s, transform 0.15s;
+    border: 1.5px solid #ddd; border-radius: 10px;
+    font-family: inherit;
+    font-size: 16px; /* min 16px prevents iOS zoom */
+    color: var(--text); outline: none;
+    transition: border-color 0.25s, box-shadow 0.25s;
   }
-  .input-wrap input:focus { border-color: #6F2DBD; box-shadow: 0 0 0 3px rgba(111,45,189,0.12); }
-  .inp-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #bbb; pointer-events: none; transition: color 0.2s; }
-  .input-wrap:focus-within .inp-icon { color: #6F2DBD; }
-  .eye-btn { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #bbb; padding: 3px; display: flex; align-items: center; transition: color 0.2s; }
-  .eye-btn:hover { color: #6F2DBD; }
+  .input-wrap input:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(111,45,189,0.12); }
+  .inp-icon {
+    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+    color: #bbb; pointer-events: none; transition: color 0.2s;
+  }
+  .input-wrap:focus-within .inp-icon { color: var(--purple); }
+  .eye-btn {
+    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; cursor: pointer; color: #bbb;
+    padding: 8px; display: flex; align-items: center;
+    transition: color 0.2s; touch-action: manipulation;
+  }
+  .eye-btn:hover { color: var(--purple); }
   .btn-login {
     width: 100%; padding: 15px;
-    background: linear-gradient(135deg, #6F2DBD 0%, #8E44EC 100%);
-    border: none; border-radius: 10px; color: #fff;
-    font-family: Helvetica, Arial, sans-serif; font-size: 17px; font-weight: 700;
-    cursor: pointer; transition: filter 0.2s, transform 0.15s, box-shadow 0.2s;
+    background: linear-gradient(135deg, var(--purple) 0%, var(--purple-lt) 100%);
+    border: none; border-radius: 11px; color: #fff;
+    font-family: inherit; font-size: 17px; font-weight: 700;
+    cursor: pointer; touch-action: manipulation;
+    transition: filter 0.2s, transform 0.15s, box-shadow 0.2s;
     box-shadow: 0 4px 18px rgba(111,45,189,0.3);
   }
-  .btn-login:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-1px); box-shadow: 0 7px 22px rgba(111,45,189,0.35); }
-  .btn-login:active:not(:disabled) { transform: translateY(0); filter: brightness(0.96); }
+  .btn-login:hover:not(:disabled)  { filter: brightness(1.08); transform: translateY(-1px); box-shadow: 0 7px 22px rgba(111,45,189,0.35); }
+  .btn-login:active:not(:disabled) { transform: translateY(0); filter: brightness(0.95); }
   .btn-login:disabled { opacity: 0.5; cursor: not-allowed; }
-  .error-msg { font-size: 13px; color: #d63031; margin-top: 8px; display: none; align-items: center; gap: 5px; animation: fadeInUp 0.25s ease; }
+  .error-msg {
+    font-size: 13px; color: #d63031; margin-top: 9px;
+    display: none; align-items: center; gap: 5px;
+    animation: fadeInUp 0.25s ease;
+  }
   .error-msg.show { display: flex; }
 
-  /* ── MAIN ── */
-  #page-main { flex-direction: column; min-height: calc(100vh - 62px); }
-  .main-body { display: grid; grid-template-columns: 1fr 420px; gap: 28px; padding: 32px 36px; max-width: 1340px; margin: 0 auto; width: 100%; }
+  /* ═══ MAIN PAGE ═══ */
+  #page-main {
+    flex-direction: column;
+    min-height: calc(100vh - var(--header-h));
+    min-height: calc(100dvh - var(--header-h));
+  }
 
-  .sec-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.8px; color: #6F2DBD; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; animation: fadeInDown 0.4s ease both; }
+  /* Two-column grid: form | records */
+  .main-body {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 24px;
+    padding: 28px 28px;
+    max-width: 1300px;
+    margin: 0 auto; width: 100%;
+    align-items: start;
+  }
+
+  .sec-label {
+    font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1.8px; color: var(--purple);
+    margin-bottom: 14px;
+    display: flex; align-items: center; gap: 10px;
+    animation: fadeInDown 0.4s ease both;
+  }
   .sec-label::after { content:''; flex:1; height:1.5px; background: linear-gradient(90deg, #e0d0f7, transparent); }
 
-  /* ── FORM ── */
+  /* ── FORM CARD ── */
   .form-card {
-    background: #fff; border: 1.5px solid #e8e1f7; border-radius: 16px;
-    padding: 28px 28px 24px;
+    background: var(--white); border: 1.5px solid var(--border);
+    border-radius: 16px; padding: 24px 24px 20px;
     box-shadow: 0 3px 20px rgba(111,45,189,0.08);
     animation: fadeInUp 0.45s ease both;
     transition: box-shadow 0.3s;
   }
   .form-card:hover { box-shadow: 0 6px 28px rgba(111,45,189,0.12); }
 
-  .field { margin-bottom: 18px; }
-  .field label { display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #555; margin-bottom: 7px; transition: color 0.2s; }
-  .field:focus-within label { color: #6F2DBD; }
+  .field { margin-bottom: 16px; }
+  .field label {
+    display: block; font-size: 11.5px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    color: #555; margin-bottom: 6px; transition: color 0.2s;
+  }
+  .field:focus-within label { color: var(--purple); }
   .field input, .field select, .field textarea {
     width: 100%; padding: 11px 13px;
     border: 1.5px solid #ddd; border-radius: 9px;
-    font-family: Helvetica, Arial, sans-serif; font-size: 15px; color: #1a1a1a;
-    background: #fff; outline: none;
+    font-family: inherit; font-size: 16px; color: var(--text);
+    background: var(--white); outline: none;
+    -webkit-appearance: none; appearance: none;
     transition: border-color 0.25s, box-shadow 0.25s, background 0.2s;
   }
   .field input:focus, .field select:focus, .field textarea:focus {
-    border-color: #6F2DBD; box-shadow: 0 0 0 3px rgba(111,45,189,0.1); background: #fdfaff;
+    border-color: var(--purple); box-shadow: 0 0 0 3px rgba(111,45,189,0.1); background: #fdfaff;
   }
-  .field textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
-
-  .field-optional { font-weight: 400; text-transform: none; letter-spacing: 0; color: #bbb; font-size: 11px; }
+  /* Custom select arrow */
+  .field select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 13px center;
+    padding-right: 36px;
+  }
+  .field textarea { resize: vertical; min-height: 76px; line-height: 1.5; font-size: 15px; }
+  .field-optional { font-weight: 400; text-transform: none; letter-spacing: 0; color: #bbb; font-size: 10.5px; }
 
   .amount-wrap { position: relative; }
-  .amount-prefix { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); font-size: 16px; font-weight: 700; color: #6F2DBD; pointer-events: none; }
-  .amount-wrap input { padding-left: 28px; font-size: 20px; font-weight: 700; color: #6F2DBD; }
-
-  .field-row   { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  .field-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
-
-  /* Category select with icon spacing */
-  .field select option { padding: 6px; }
-
-  /* Running total bar */
-  .running-total-bar {
-    background: linear-gradient(135deg, #f3ecff, #ede6fa);
-    border: 1.5px solid #d5bff5; border-radius: 10px;
-    padding: 12px 18px; display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 18px; transition: all 0.3s;
+  .amount-prefix {
+    position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+    font-size: 16px; font-weight: 700; color: var(--purple); pointer-events: none;
   }
-  .running-total-bar .rt-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #8E44EC; }
-  .running-total-bar .rt-val { font-size: 22px; font-weight: 700; color: #6F2DBD; transition: color 0.3s; }
+  .amount-wrap input { padding-left: 28px; font-size: 22px; font-weight: 700; color: var(--purple); }
+
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  .form-divider { height: 1px; background: linear-gradient(90deg, transparent, #e8e1f7, transparent); margin: 4px 0 18px; }
 
   .btn-record {
     width: 100%; padding: 15px;
-    background: linear-gradient(135deg, #1a7d34 0%, #1e8c3a 100%);
-    border: none; border-radius: 10px; color: #fff;
-    font-family: Helvetica, Arial, sans-serif; font-size: 17px; font-weight: 700;
-    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+    background: linear-gradient(135deg, var(--green-dark), var(--green));
+    border: none; border-radius: 11px; color: #fff;
+    font-family: inherit; font-size: 17px; font-weight: 700;
+    cursor: pointer; touch-action: manipulation;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
     transition: filter 0.2s, transform 0.15s, box-shadow 0.2s;
-    box-shadow: 0 4px 18px rgba(30,140,58,0.3); margin-top: 6px;
+    box-shadow: 0 4px 18px rgba(30,140,58,0.3);
   }
-  .btn-record:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(30,140,58,0.35); animation: pulse-ring 1.2s infinite; }
+  .btn-record:hover:not(:disabled)  { filter: brightness(1.07); transform: translateY(-2px); animation: pulseGreen 1.4s infinite; }
   .btn-record:active:not(:disabled) { transform: translateY(0); filter: brightness(0.95); }
   .btn-record:disabled { opacity: 0.45; cursor: not-allowed; }
 
   /* ── RECORDS PANEL ── */
+  .records-col { min-width: 0; }
   .records-card {
-    background: #fff; border: 1.5px solid #e8e1f7; border-radius: 16px;
+    background: var(--white); border: 1.5px solid var(--border);
+    border-radius: 16px;
     box-shadow: 0 3px 20px rgba(111,45,189,0.08);
-    display: flex; flex-direction: column; max-height: calc(100vh - 130px);
-    position: sticky; top: 90px;
+    display: flex; flex-direction: column;
+    max-height: calc(100vh - 108px);
+    position: sticky; top: 76px;
     animation: slideInRight 0.5s ease both;
+    overflow: hidden;
   }
-  .records-head { padding: 18px 20px 12px; border-bottom: 1.5px solid #f0eafa; flex-shrink: 0; }
-  .records-head h2 { font-size: 17px; font-weight: 700; margin-bottom: 2px; }
-  .records-head p  { font-size: 13px; color: #888; }
-  .records-head p span { color: #6F2DBD; font-weight: 700; }
+  .records-head { padding: 16px 18px 12px; border-bottom: 1.5px solid #f0eafa; flex-shrink: 0; }
+  .records-head h2 { font-size: 16px; font-weight: 700; margin-bottom: 2px; }
+  .records-head p  { font-size: 12.5px; color: var(--muted); }
+  .records-head p span { color: var(--purple); font-weight: 700; }
 
-  .records-filters { padding: 10px 12px; border-bottom: 1px solid #f0eafa; flex-shrink: 0; display: flex; gap: 8px; }
-  .records-filters select, .records-filters input[type="date"] {
-    flex: 1; padding: 7px 10px; border: 1.5px solid #ddd; border-radius: 7px;
-    font-family: Helvetica, Arial, sans-serif; font-size: 12px; color: #1a1a1a; background: #fff;
-    outline: none; cursor: pointer; transition: border-color 0.2s;
+  .records-filters {
+    padding: 9px 11px; border-bottom: 1px solid #f0eafa;
+    flex-shrink: 0; display: flex; gap: 7px;
   }
-  .records-filters select:focus, .records-filters input[type="date"]:focus { border-color: #6F2DBD; }
-  .records-filters input[type="date"] { flex: 1.2; }
+  .records-filters select,
+  .records-filters input[type="date"] {
+    flex: 1; padding: 8px 10px;
+    border: 1.5px solid #ddd; border-radius: 8px;
+    font-family: inherit; font-size: 12px; color: var(--text);
+    background: var(--white); outline: none; cursor: pointer;
+    -webkit-appearance: none; appearance: none;
+    transition: border-color 0.2s;
+  }
+  .records-filters select:focus,
+  .records-filters input[type="date"]:focus { border-color: var(--purple); }
+  .records-filters input[type="date"] { flex: 1.3; }
 
-  .records-scroll { flex: 1; overflow-y: auto; padding: 10px 12px 12px; }
+  .records-scroll { flex: 1; overflow-y: auto; padding: 10px 11px 12px; -webkit-overflow-scrolling: touch; }
   .records-scroll::-webkit-scrollbar { width: 4px; }
   .records-scroll::-webkit-scrollbar-thumb { background: #c9b3eb; border-radius: 4px; }
 
-  .rec-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 50px 20px; gap: 10px; text-align: center; color: #bbb; font-size: 14px; animation: fadeInUp 0.4s ease; }
+  .rec-empty {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; padding: 48px 20px; gap: 10px;
+    text-align: center; color: #bbb; font-size: 13.5px;
+    animation: fadeInUp 0.4s ease;
+  }
 
   .rec-item {
-    background: #faf7ff; border: 1.5px solid #ede6fa; border-radius: 11px;
-    padding: 12px 14px; margin-bottom: 7px;
+    background: #faf7ff; border: 1.5px solid #ede6fa;
+    border-radius: 11px; padding: 12px 13px; margin-bottom: 7px;
     transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
     animation: recordPop 0.3s cubic-bezier(.34,1.56,.64,1) both;
   }
   .rec-item:hover { border-color: #b89ee8; box-shadow: 0 4px 14px rgba(111,45,189,0.1); transform: translateX(3px); }
-  .rec-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
-  .rec-reason { font-size: 13px; font-weight: 700; color: #1a1a1a; flex: 1; line-height: 1.4; }
-  .rec-amount { font-size: 16px; font-weight: 700; color: #1e8c3a; white-space: nowrap; flex-shrink: 0; }
-  .rec-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 3px; }
-  .rec-date { font-size: 11px; color: #aaa; }
-  .rec-by   { font-size: 11px; color: #aaa; }
-  .rec-cat  { font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 20px; display: inline-flex; align-items: center; gap: 4px; }
-
-  /* New category colors */
-  .rec-cat.medical-supplies { background: #e8f4fd; color: #1565c0; }
-  .rec-cat.equipment        { background: #fce4ec; color: #c62828; }
-  .rec-cat.rent             { background: #fff8e1; color: #f57f17; }
-  .rec-cat.utilities        { background: #e3f2fd; color: #0277bd; }
-  .rec-cat.service-invoices { background: #f3e5f5; color: #7b1fa2; }
-  .rec-cat.staffing         { background: #e8f5e9; color: #2e7d32; }
-  .rec-cat.office-supplies  { background: #e0f2f1; color: #00695c; }
-  .rec-cat.transport        { background: #fff3e0; color: #e65100; }
-  .rec-cat.other            { background: #f5f5f5; color: #757575; }
-
-  .rec-notes { font-size: 11px; color: #999; margin-top: 4px; font-style: italic; line-height: 1.4; }
-  .rec-invoice { font-size: 11px; color: #8E44EC; margin-top: 3px; font-weight: 600; }
+  .rec-top    { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+  .rec-reason { font-size: 13px; font-weight: 700; color: var(--text); flex: 1; line-height: 1.4; }
+  .rec-amount { font-size: 15px; font-weight: 700; color: var(--green); white-space: nowrap; flex-shrink: 0; }
+  .rec-meta   { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; margin-bottom: 3px; }
+  .rec-date   { font-size: 11px; color: #aaa; }
+  .rec-by     { font-size: 11px; color: #aaa; }
+  .rec-cat    { font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 20px; display: inline-flex; align-items: center; gap: 3px; }
+  .rec-cat.medical-supplies { background:#e8f4fd; color:#1565c0; }
+  .rec-cat.equipment        { background:#fce4ec; color:#c62828; }
+  .rec-cat.rent             { background:#fff8e1; color:#f57f17; }
+  .rec-cat.utilities        { background:#e3f2fd; color:#0277bd; }
+  .rec-cat.service-invoices { background:#f3e5f5; color:#7b1fa2; }
+  .rec-cat.staffing         { background:#e8f5e9; color:#2e7d32; }
+  .rec-cat.office-supplies  { background:#e0f2f1; color:#00695c; }
+  .rec-cat.transport        { background:#fff3e0; color:#e65100; }
+  .rec-cat.other            { background:#f5f5f5; color:#757575; }
+  .rec-notes   { font-size: 11px; color: #999; margin-top: 4px; font-style: italic; line-height: 1.4; }
+  .rec-invoice { font-size: 11px; color: var(--purple); margin-top: 3px; font-weight: 600; }
 
   .records-footer { padding: 12px 16px; border-top: 1.5px solid #f0eafa; flex-shrink: 0; }
-  .total-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-  .total-row .lbl { font-size: 13px; color: #888; font-weight: 600; }
-  .total-row .val { font-size: 22px; font-weight: 700; color: #6F2DBD; transition: all 0.4s; }
-  .total-row.sub .val { font-size: 14px; color: #aaa; }
+  .total-row { display: flex; justify-content: space-between; align-items: center; }
+  .total-row .lbl { font-size: 13px; color: var(--muted); font-weight: 600; }
+  .total-row .val { font-size: 22px; font-weight: 700; color: var(--purple); transition: all 0.4s; }
 
   /* ── TOAST ── */
   .toast {
-    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
-    background: #1a1a1a; color: #fff; padding: 13px 26px; border-radius: 12px;
-    font-size: 14px; font-weight: 600; opacity: 0; pointer-events: none;
+    position: fixed; bottom: 24px; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    padding: 12px 22px; border-radius: 12px;
+    font-size: 14px; font-weight: 600; color: #fff;
+    opacity: 0; pointer-events: none;
     transition: opacity 0.3s cubic-bezier(.34,1.56,.64,1), transform 0.3s cubic-bezier(.34,1.56,.64,1);
-    z-index: 9999; white-space: nowrap; box-shadow: 0 6px 28px rgba(0,0,0,0.22);
+    z-index: 9999; box-shadow: 0 6px 28px rgba(0,0,0,0.22);
     display: flex; align-items: center; gap: 8px;
+    max-width: calc(100vw - 32px);
   }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-  .toast.err { background: linear-gradient(135deg, #c0392b, #e74c3c); }
-  .toast.ok  { background: linear-gradient(135deg, #1a7d34, #1e8c3a); }
+  .toast.err  { background: linear-gradient(135deg, #c0392b, #e74c3c); }
+  .toast.ok   { background: linear-gradient(135deg, var(--green-dark), var(--green)); }
 
   /* ── SPINNER ── */
-  .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.35); border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite; display: inline-block; flex-shrink: 0; }
-
-  /* ── DIVIDER ── */
-  .form-divider { height: 1px; background: linear-gradient(90deg, transparent, #e8e1f7, transparent); margin: 6px 0 20px; }
-
-  @media (max-width: 960px) {
-    .main-body { grid-template-columns: 1fr; padding: 20px 16px; }
-    .records-card { max-height: 520px; position: static; }
-    .field-row-3 { grid-template-columns: 1fr 1fr; }
+  .spinner {
+    width: 16px; height: 16px;
+    border: 2px solid rgba(255,255,255,0.35); border-top-color: #fff;
+    border-radius: 50%; animation: spin 0.6s linear infinite;
+    display: inline-block; flex-shrink: 0;
   }
-  @media (max-width: 600px) {
-    .field-row, .field-row-3 { grid-template-columns: 1fr; }
-    .header { padding: 0 18px; }
-    .header-logo-name { font-size: 16px; }
+
+  /* ══════════════════════════════════════
+     BREAKPOINTS
+  ══════════════════════════════════════ */
+
+  /* Laptop / small desktop  1024–1199px */
+  @media (max-width: 1199px) {
+    .main-body { grid-template-columns: 1fr 360px; gap: 20px; padding: 24px; }
+  }
+
+  /* Tablet landscape  768–1023px — single column */
+  @media (max-width: 1023px) {
+    .main-body {
+      grid-template-columns: 1fr;
+      padding: 20px;
+      gap: 20px;
+    }
+    .records-card {
+      max-height: 580px;
+      position: static;
+      animation: fadeInUp 0.45s ease both;
+    }
+  }
+
+  /* Tablet portrait  600–767px */
+  @media (max-width: 767px) {
+    :root { --header-h: 56px; }
+    .header {
+      padding: 0 18px;
+      padding-left:  max(18px, env(safe-area-inset-left));
+      padding-right: max(18px, env(safe-area-inset-right));
+    }
+    .logo-full         { font-size: 17px; }
+    .header-logo-sub   { font-size: 11px; }
+    .main-body         { padding: 16px; gap: 16px; }
+    .form-card         { padding: 20px 18px 18px; }
+    .login-card        { padding: 36px 28px 32px; }
+    .records-card      { max-height: 520px; }
+  }
+
+  /* Mobile  ≤599px */
+  @media (max-width: 599px) {
+    :root { --header-h: 54px; }
+
+    /* Swap full name → QDC */
+    .logo-full  { display: none; }
+    .logo-short { display: block; font-size: 18px; font-weight: 800; letter-spacing: 0.5px; }
+
+    /* Logout: icon only, no text */
+    .logout-btn       { padding: 7px 10px; }
+    .logout-label     { display: none; }
+
+    .header-logo-icon       { width: 34px; height: 34px; }
+    .header-logo-icon img   { width: 34px; height: 34px; }
+    .header-logo-sub        { font-size: 10.5px; }
+
+    /* Login card */
+    #page-login    { padding: 20px 14px; align-items: flex-start; padding-top: 30px; }
+    .login-card    { padding: 28px 20px 26px; border-radius: 16px; }
+    .login-logo-icon     { width: 68px; height: 68px; }
+    .login-logo-icon img { width: 68px; height: 68px; }
+    .login-logo h1 { font-size: 22px; }
+    .login-logo p  { font-size: 13px; }
+
+    /* Main layout */
+    .main-body  { padding: 12px; gap: 12px; }
+    .form-card  { padding: 16px 14px 14px; border-radius: 14px; }
+
+    /* All rows → single column */
+    .field-row { grid-template-columns: 1fr; gap: 0; }
+
+    /* Records panel */
+    .records-card  { max-height: 500px; border-radius: 14px; }
+    .records-filters { flex-direction: column; gap: 6px; }
+    .records-filters select,
+    .records-filters input[type="date"] { flex: none; width: 100%; font-size: 13px; padding: 9px 10px; }
+
+    /* Bigger tap targets */
+    .field input, .field select, .field textarea { font-size: 16px; padding: 12px 13px; }
+    .field select { padding-right: 36px; }
+    .amount-wrap input { font-size: 20px; }
+    .btn-record, .btn-login { font-size: 16px; padding: 14px; }
+
+    .toast { font-size: 13px; padding: 11px 18px; bottom: 16px; }
+    .total-row .val { font-size: 20px; }
+  }
+
+  /* Very small phones  ≤380px (iPhone SE etc.) */
+  @media (max-width: 380px) {
+    .login-card { padding: 24px 16px 22px; }
+    .main-body  { padding: 10px; }
+    .form-card  { padding: 14px 13px 13px; }
+    .records-card { max-height: 460px; }
+    .total-row .val { font-size: 18px; }
+    .header-logo-sub { display: none; } /* hide sub on very tiny screens */
   }
 </style>
 </head>
 <body>
 
-<!-- HEADER -->
+<!-- ═══════════════ HEADER ═══════════════ -->
 <div class="header">
   <div class="header-logo">
     <div class="header-logo-icon">
-      <img src="qc-logo.png" alt="QC Logo" />
+      <img src="qc-logo.png" alt="QDC" />
     </div>
     <div>
-      <div class="header-logo-name">Qualicheck Diagnostic Center</div>
+      <div class="logo-full">Qualicheck Diagnostic Center</div>
+      <div class="logo-short">QDC</div>
       <div class="header-logo-sub">Daily Expenses Recorder</div>
     </div>
   </div>
-  <button class="logout-btn" id="logout-btn" onclick="doLogout()">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-    Logout
+  <button class="logout-btn" id="logout-btn" onclick="doLogout()" type="button" aria-label="Logout">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+      <polyline points="16 17 21 12 16 7"/>
+      <line x1="21" y1="12" x2="9" y2="12"/>
+    </svg>
+    <span class="logout-label">Logout</span>
   </button>
 </div>
 
-<!-- LOGIN PAGE -->
+<!-- ═══════════════ LOGIN PAGE ═══════════════ -->
 <div class="page active" id="page-login">
   <div class="login-card">
     <div class="login-logo">
       <div class="login-logo-icon">
-        <img src="qc-logo-purple.png" alt="QC Logo" />
+        <img src="qc-logo-purple.png" alt="QDC" />
       </div>
       <h1>Expenses Portal</h1>
-      <p>Qualicheck Diagnostic Center</p>
+      <p>Track and record daily operational expenses.</p>
     </div>
+
     <div class="form-group">
       <label>Username</label>
       <div class="input-wrap">
         <span class="inp-icon">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+          </svg>
         </span>
-        <input type="text" id="inp-user" placeholder="Enter username" autocomplete="off" />
+        <input type="text" id="inp-user" placeholder="Enter username"
+          autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" />
       </div>
     </div>
+
     <div class="form-group">
       <label>Password</label>
       <div class="input-wrap">
         <span class="inp-icon">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
         </span>
-        <input type="password" id="inp-pass" placeholder="Enter password" />
-        <button class="eye-btn" onclick="toggleEye()">
-          <svg id="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        <input type="password" id="inp-pass" placeholder="Enter password" autocomplete="current-password" />
+        <button class="eye-btn" onclick="toggleEye()" type="button" aria-label="Toggle password visibility">
+          <svg id="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+          </svg>
         </button>
       </div>
       <div class="error-msg" id="login-error">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
         <span id="error-text">Invalid credentials.</span>
       </div>
     </div>
-    <button class="btn-login" id="login-btn" onclick="doLogin()"><span id="login-btn-text">Sign In</span></button>
+
+    <button class="btn-login" id="login-btn" onclick="doLogin()" type="button">
+      <span id="login-btn-text">Sign In</span>
+    </button>
   </div>
 </div>
 
-<!-- MAIN PAGE -->
+<!-- ═══════════════ MAIN PAGE ═══════════════ -->
 <div class="page" id="page-main">
   <div class="main-body">
 
-    <!-- LEFT: Form -->
-    <div>
+    <!-- Form (left on desktop, top on mobile) -->
+    <div class="form-col">
       <div class="sec-label">Record Expense</div>
       <div class="form-card">
 
@@ -321,7 +550,9 @@
           </div>
           <div class="field">
             <label>Encoded By</label>
-            <input type="text" id="f-encoder" placeholder="Staff name" oninput="this.value=this.value.toUpperCase()" />
+            <input type="text" id="f-encoder" placeholder="Staff name"
+              oninput="this.value=this.value.toUpperCase()"
+              autocapitalize="characters" autocomplete="off" />
           </div>
         </div>
 
@@ -329,7 +560,8 @@
           <label>Amount (₱)</label>
           <div class="amount-wrap">
             <span class="amount-prefix">₱</span>
-            <input type="number" id="f-amount" placeholder="0.00" min="0" step="0.01" oninput="updateRunningTotal()" />
+            <input type="number" id="f-amount" placeholder="0.00"
+              min="0" step="0.01" inputmode="decimal" />
           </div>
         </div>
 
@@ -351,32 +583,37 @@
 
         <div class="field">
           <label>Details / Item Purchased</label>
-          <textarea id="f-details" placeholder="e.g. Reagent kit x5, Printer ink cartridge, Staff allowance…"></textarea>
+          <textarea id="f-details"
+            placeholder=""></textarea>
         </div>
 
         <div class="field-row">
           <div class="field">
             <label>Invoice No. <span class="field-optional">(optional)</span></label>
-            <input type="text" id="f-invoice" placeholder="e.g. INV-2026-001" />
+            <input type="text" id="f-invoice" placeholder=""
+              autocomplete="off" autocapitalize="characters" />
           </div>
           <div class="field">
             <label>Notes <span class="field-optional">(optional)</span></label>
-            <input type="text" id="f-notes" placeholder="Supplier, receipt no., info…" />
+            <input type="text" id="f-notes" placeholder="Supplier, receipt no., info…"
+              autocomplete="off" />
           </div>
         </div>
 
         <div class="form-divider"></div>
 
-        <button class="btn-record" id="submit-btn" onclick="submitExpense()">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        <button class="btn-record" id="submit-btn" onclick="submitExpense()" type="button">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
           Record Expense
         </button>
 
       </div>
     </div>
 
-    <!-- RIGHT: Records -->
-    <div>
+    <!-- Records panel (right on desktop, bottom on mobile) -->
+    <div class="records-col">
       <div class="sec-label">Today's Expenses</div>
       <div class="records-card">
         <div class="records-head">
@@ -387,20 +624,25 @@
           <input type="date" id="filter-date" onchange="renderRecords()" />
           <select id="filter-cat" onchange="renderRecords()">
             <option value="">All Categories</option>
-            <option value="medical-supplies">Medical Supplies &amp; Reagents</option>
-            <option value="equipment">Equipment &amp; Maintenance</option>
-            <option value="rent">Rent &amp; Occupancy</option>
-            <option value="utilities">Utilities &amp; Bills</option>
+            <option value="medical-supplies">Medical Supplies</option>
+            <option value="equipment">Equipment</option>
+            <option value="rent">Rent</option>
+            <option value="utilities">Utilities</option>
             <option value="service-invoices">Service Invoices</option>
-            <option value="staffing">Staffing &amp; Professional Fees</option>
-            <option value="office-supplies">Office &amp; Admin Supplies</option>
-            <option value="transport">Transport &amp; Delivery</option>
-            <option value="other">Other / Miscellaneous</option>
+            <option value="staffing">Staffing</option>
+            <option value="office-supplies">Office Supplies</option>
+            <option value="transport">Transport</option>
+            <option value="other">Other</option>
           </select>
         </div>
         <div class="records-scroll" id="records-scroll">
           <div class="rec-empty">
-            <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#ddd" stroke-width="1.5"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="11" x2="15" y2="11"/><line x1="9" y1="15" x2="13" y2="15"/></svg>
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ddd" stroke-width="1.5">
+              <rect x="5" y="2" width="14" height="20" rx="2"/>
+              <line x1="9" y1="7" x2="15" y2="7"/>
+              <line x1="9" y1="11" x2="15" y2="11"/>
+              <line x1="9" y1="15" x2="13" y2="15"/>
+            </svg>
             <p>No records yet.<br/>Record the first expense.</p>
           </div>
         </div>
@@ -416,20 +658,20 @@
   </div>
 </div>
 
-<div class="toast" id="toast">
+<!-- Toast notification -->
+<div class="toast" id="toast" role="status" aria-live="polite">
   <span id="toast-icon"></span>
   <span id="toast-msg"></span>
 </div>
 
+<!-- ═══════════════════════════════════════════
+     JAVASCRIPT
+═══════════════════════════════════════════ -->
 <script>
-/* ══════════════════════════════
-   CONFIG — paste your Web App URL
-══════════════════════════════ */
+/* ─── CONFIG ─── */
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwvxHeQ6WtMy9rq20rGK9QF567Jzw4povGqHlF6I_yW9l_x4LRHfDKMwJOkH9pteX2l/exec';
 
-/* ══════════════════════════════
-   STATE
-══════════════════════════════ */
+/* ─── STATE ─── */
 let records = [];
 
 const CAT_LABEL = {
@@ -438,28 +680,25 @@ const CAT_LABEL = {
   'rent':             'Rent & Occupancy',
   'utilities':        'Utilities & Bills',
   'service-invoices': 'Service Invoices',
-  'staffing':         'Staffing & Professional Fees',
+  'staffing':         'Staffing & Prof. Fees',
   'office-supplies':  'Office & Admin Supplies',
   'transport':        'Transport & Delivery',
   'other':            'Other / Miscellaneous',
 };
 
-/* Flat SVG icons — single color, no emoji */
 const CAT_ICON = {
-  'medical-supplies': `<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-7 13h-2v-4H6v-2h4V6h2v4h4v2h-4v4z"/></svg>`,
-  'equipment':        `<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 0 1 3.51 15" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M1 14h6v6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M23 10h-6V4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
-  'rent':             `<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9.5L12 3l9 6.5V21a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><path d="M9 22V12h6v10" fill="white"/></svg>`,
-  'utilities':        `<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>`,
-  'service-invoices': `<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>`,
-  'staffing':         `<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75M21 21v-2a4 4 0 0 0-3-3.87" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>`,
-  'office-supplies':  `<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>`,
-  'transport':        `<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>`,
-  'other':            `<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>`,
+  'medical-supplies': `<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-7 13h-2v-4H6v-2h4V6h2v4h4v2h-4v4z"/></svg>`,
+  'equipment':        `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>`,
+  'rent':             `<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9.5L12 3l9 6.5V21a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><rect x="9" y="12" width="6" height="10" fill="white" rx="1"/></svg>`,
+  'utilities':        `<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>`,
+  'service-invoices': `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`,
+  'staffing':         `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+  'office-supplies':  `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>`,
+  'transport':        `<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>`,
+  'other':            `<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>`,
 };
 
-/* ══════════════════════════════
-   HELPERS
-══════════════════════════════ */
+/* ─── HELPERS ─── */
 function fmtPeso(n) {
   return '₱ ' + Number(n || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
@@ -469,26 +708,20 @@ function todayStr() {
 }
 function fmtDate(str) {
   if (!str) return '—';
-  const d = new Date(str + 'T00:00:00');
-  return d.toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
+  return new Date(str + 'T00:00:00').toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
 }
-function showToast(msg, type='ok') {
+function showToast(msg, type = 'ok') {
   const el   = document.getElementById('toast');
   const icon = document.getElementById('toast-icon');
   document.getElementById('toast-msg').textContent = msg;
   icon.innerHTML = type === 'ok'
-    ? '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>'
-    : '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+    ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`
+    : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
   el.className = 'toast show ' + type;
   setTimeout(() => el.classList.remove('show'), 3500);
 }
-function updateRunningTotal() {
-  // kept for future running total bar if re-added
-}
 
-/* ══════════════════════════════
-   AUTH
-══════════════════════════════ */
+/* ─── AUTH ─── */
 function doLogin() {
   const u      = document.getElementById('inp-user').value.trim();
   const p      = document.getElementById('inp-pass').value.trim();
@@ -508,7 +741,11 @@ function doLogin() {
     setTimeout(() => {
       const ok = DEMO.find(x => x.u === u && x.p === p);
       if (ok) { loginSuccess(u); }
-      else { btn.disabled = false; btnTxt.textContent = 'Sign In'; errTxt.textContent = 'Invalid credentials.'; errEl.classList.add('show'); document.getElementById('inp-pass').value = ''; }
+      else {
+        btn.disabled = false; btnTxt.textContent = 'Sign In';
+        errTxt.textContent = 'Invalid credentials.'; errEl.classList.add('show');
+        document.getElementById('inp-pass').value = '';
+      }
     }, 400);
     return;
   }
@@ -516,43 +753,41 @@ function doLogin() {
   fetch(`${APPS_SCRIPT_URL}?action=login&user=${encodeURIComponent(u)}&pass=${encodeURIComponent(p)}`)
     .then(r => r.json())
     .then(d => {
-      if (d.success) loginSuccess(u);
+      if (d.success) { loginSuccess(u); }
       else {
         btn.disabled = false; btnTxt.textContent = 'Sign In';
-        errTxt.textContent = d.message || 'Invalid credentials.';
-        errEl.classList.add('show');
+        errTxt.textContent = d.message || 'Invalid credentials.'; errEl.classList.add('show');
         document.getElementById('inp-pass').value = '';
       }
     })
-    .catch(() => { btn.disabled = false; btnTxt.textContent = 'Sign In'; errTxt.textContent = 'Connection error.'; errEl.classList.add('show'); });
+    .catch(() => {
+      btn.disabled = false; btnTxt.textContent = 'Sign In';
+      errTxt.textContent = 'Connection error. Try again.'; errEl.classList.add('show');
+    });
 }
 
 function loginSuccess(username) {
   const loginPage = document.getElementById('page-login');
   const mainPage  = document.getElementById('page-main');
-  loginPage.style.opacity = '0';
-  loginPage.style.transition = 'opacity 0.3s ease';
+  loginPage.style.cssText = 'opacity:0;transition:opacity 0.28s ease;';
   setTimeout(() => {
-    loginPage.classList.remove('active');
-    loginPage.style.opacity = '';
+    loginPage.classList.remove('active'); loginPage.style.cssText = '';
     mainPage.classList.add('active');
     document.getElementById('logout-btn').classList.add('visible');
-    document.getElementById('f-date').value = todayStr();
+    document.getElementById('f-date').value      = todayStr();
     document.getElementById('filter-date').value = todayStr();
-    document.getElementById('f-encoder').value = username.toUpperCase();
+    document.getElementById('f-encoder').value   = username.toUpperCase();
     loadRecords();
-  }, 280);
+  }, 260);
 }
 
 function doLogout() {
   records = [];
   const mainPage  = document.getElementById('page-main');
   const loginPage = document.getElementById('page-login');
-  mainPage.style.opacity = '0';
-  mainPage.style.transition = 'opacity 0.25s ease';
+  mainPage.style.cssText = 'opacity:0;transition:opacity 0.22s ease;';
   setTimeout(() => {
-    mainPage.classList.remove('active');
-    mainPage.style.opacity = '';
+    mainPage.classList.remove('active'); mainPage.style.cssText = '';
     loginPage.classList.add('active');
     document.getElementById('logout-btn').classList.remove('visible');
     document.getElementById('login-btn').disabled = false;
@@ -561,17 +796,18 @@ function doLogout() {
     document.getElementById('inp-user').value = '';
     document.getElementById('inp-pass').value = '';
     renderRecords();
-  }, 230);
+  }, 210);
 }
 
 function toggleEye() {
-  const inp = document.getElementById('inp-pass'), ico = document.getElementById('eye-icon');
+  const inp = document.getElementById('inp-pass');
+  const ico = document.getElementById('eye-icon');
   if (inp.type === 'password') {
     inp.type = 'text';
-    ico.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+    ico.innerHTML = `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>`;
   } else {
     inp.type = 'password';
-    ico.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+    ico.innerHTML = `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`;
   }
 }
 
@@ -580,9 +816,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('inp-pass').addEventListener('keydown', e => { if (e.key==='Enter') doLogin(); });
 });
 
-/* ══════════════════════════════
-   LOAD RECORDS
-══════════════════════════════ */
+/* ─── LOAD RECORDS ─── */
 function loadRecords() {
   if (APPS_SCRIPT_URL === 'YOUR_FINANCES_APPS_SCRIPT_URL') { records = []; renderRecords(); return; }
   fetch(`${APPS_SCRIPT_URL}?action=getexpenses`)
@@ -591,9 +825,7 @@ function loadRecords() {
     .catch(() => { records = []; renderRecords(); });
 }
 
-/* ══════════════════════════════
-   RENDER RECORDS
-══════════════════════════════ */
+/* ─── RENDER RECORDS ─── */
 function renderRecords() {
   const catF  = document.getElementById('filter-cat')?.value  || '';
   const dateF = document.getElementById('filter-date')?.value || '';
@@ -605,23 +837,25 @@ function renderRecords() {
   });
 
   document.getElementById('rec-count').textContent = filtered.length;
-  const total = filtered.reduce((s,r) => s + (parseFloat(r.amount)||0), 0);
+  const total = filtered.reduce((s, r) => s + (parseFloat(r.amount) || 0), 0);
   document.getElementById('filtered-total').textContent = fmtPeso(total);
 
   const scroll = document.getElementById('records-scroll');
   if (!filtered.length) {
     scroll.innerHTML = `<div class="rec-empty">
-      <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#ddd" stroke-width="1.5"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="11" x2="15" y2="11"/><line x1="9" y1="15" x2="13" y2="15"/></svg>
-      <p>No records found.</p>
-    </div>`;
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ddd" stroke-width="1.5">
+        <rect x="5" y="2" width="14" height="20" rx="2"/>
+        <line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="11" x2="15" y2="11"/>
+        <line x1="9" y1="15" x2="13" y2="15"/>
+      </svg><p>No records found.</p></div>`;
     return;
   }
 
   scroll.innerHTML = [...filtered].reverse().map((r, idx) => {
-    const cat    = r.category || 'other';
-    const label  = CAT_LABEL[cat] || cat;
-    const icon   = CAT_ICON[cat]  || CAT_ICON['other'];
-    const delay  = Math.min(idx * 40, 400);
+    const cat   = r.category || 'other';
+    const label = CAT_LABEL[cat] || cat;
+    const icon  = CAT_ICON[cat]  || CAT_ICON['other'];
+    const delay = Math.min(idx * 35, 360);
     return `<div class="rec-item" style="animation-delay:${delay}ms">
       <div class="rec-top">
         <span class="rec-reason">${r.details || '—'}</span>
@@ -632,46 +866,40 @@ function renderRecords() {
         <span class="rec-by">· ${r.encoder || '—'}</span>
         <span class="rec-cat ${cat}">${icon} ${label}</span>
       </div>
-      ${r.invoice  ? `<div class="rec-invoice">INV: ${r.invoice}</div>` : ''}
-      ${r.notes    ? `<div class="rec-notes">${r.notes}</div>`          : ''}
+      ${r.invoice ? `<div class="rec-invoice">INV: ${r.invoice}</div>` : ''}
+      ${r.notes   ? `<div class="rec-notes">${r.notes}</div>`          : ''}
     </div>`;
   }).join('');
 }
 
-/* ══════════════════════════════
-   SUBMIT
-══════════════════════════════ */
+/* ─── SUBMIT ─── */
 function submitExpense() {
-  const date    = document.getElementById('f-date').value;
-  const encoder = document.getElementById('f-encoder').value.trim().toUpperCase();
-  const amount  = parseFloat(document.getElementById('f-amount').value);
-  const category= document.getElementById('f-category').value;
-  const details = document.getElementById('f-details').value.trim();
-  const invoice = document.getElementById('f-invoice').value.trim();
-  const notes   = document.getElementById('f-notes').value.trim();
+  const date     = document.getElementById('f-date').value;
+  const encoder  = document.getElementById('f-encoder').value.trim().toUpperCase();
+  const amount   = parseFloat(document.getElementById('f-amount').value);
+  const category = document.getElementById('f-category').value;
+  const details  = document.getElementById('f-details').value.trim();
+  const invoice  = document.getElementById('f-invoice').value.trim();
+  const notes    = document.getElementById('f-notes').value.trim();
 
   if (!date)                  { showToast('Please select a date.', 'err'); return; }
   if (!encoder)               { showToast('Please enter who encoded this.', 'err'); return; }
-  if (!amount || amount <= 0) { showToast('Please enter a valid amount greater than 0.', 'err'); return; }
+  if (!amount || amount <= 0) { showToast('Please enter a valid amount.', 'err'); return; }
   if (!category)              { showToast('Please select a category.', 'err'); return; }
-  if (!details)               { showToast('Please enter the item purchased / details.', 'err'); return; }
+  if (!details)               { showToast('Please enter item / details.', 'err'); return; }
 
-  const payload = { action: 'addexpense', date, encoder, amount, category, details, invoice, notes };
+  const payload = { action:'addexpense', date, encoder, amount, category, details, invoice, notes };
 
   const btn = document.getElementById('submit-btn');
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span> Saving…';
   const resetBtn = () => {
     btn.disabled = false;
-    btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Record Expense';
+    btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Record Expense`;
   };
 
   if (APPS_SCRIPT_URL === 'YOUR_FINANCES_APPS_SCRIPT_URL') {
-    setTimeout(() => {
-      records.push({ ...payload, id: Date.now() });
-      renderRecords(); clearForm(); resetBtn();
-      showToast('Expense recorded! (Demo mode)', 'ok');
-    }, 700);
+    setTimeout(() => { records.push({ ...payload, id: Date.now() }); renderRecords(); clearForm(); resetBtn(); showToast('Expense recorded! (Demo mode)', 'ok'); }, 700);
     return;
   }
 
@@ -691,7 +919,7 @@ function submitExpense() {
       showToast('Error: ' + (d.message || 'Save failed.'), 'err');
     }
   })
-  .catch(() => { resetBtn(); showToast('Network error. Check your connection.', 'err'); });
+  .catch(() => { resetBtn(); showToast('Network error. Check connection.', 'err'); });
 }
 
 function clearForm() {
@@ -700,7 +928,7 @@ function clearForm() {
   document.getElementById('f-details').value = '';
   document.getElementById('f-invoice').value = '';
   document.getElementById('f-notes').value   = '';
-  // encoder and category intentionally kept for faster repeated entries
+  // encoder + category kept for faster repeated entries
 }
 </script>
 </body>
