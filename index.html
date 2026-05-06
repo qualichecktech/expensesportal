@@ -242,6 +242,16 @@
 
   .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 
+  .payment-type-row { display: flex; gap: 8px; margin-bottom: 16px; }
+  .payment-type-btn {
+    flex: 1; padding: 10px; border: 1.5px solid #ddd; border-radius: 9px;
+    background: var(--white); color: var(--text); font-family: inherit;
+    font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+    text-align: center; touch-action: manipulation;
+  }
+  .payment-type-btn:hover { border-color: var(--purple); }
+  .payment-type-btn.active { background: var(--purple); border-color: var(--purple); color: #fff; }
+
   .form-divider { height: 1px; background: linear-gradient(90deg, transparent, #e8e1f7, transparent); margin: 4px 0 18px; }
 
   .btn-record {
@@ -582,6 +592,16 @@
         </div>
 
         <div class="field">
+          <label>Payment Type</label>
+          <div class="payment-type-row">
+            <button type="button" class="payment-type-btn" onclick="setPaymentType('CASH', this)">Cash</button>
+            <button type="button" class="payment-type-btn" onclick="setPaymentType('CHEQUE', this)">Cheque</button>
+            <button type="button" class="payment-type-btn" onclick="setPaymentType('E-WALLET', this)">E-Wallet</button>
+          </div>
+          <input type="hidden" id="f-payment-type" value="" />
+        </div>
+
+        <div class="field">
           <label>Details / Item Purchased</label>
           <textarea id="f-details"
             placeholder=""></textarea>
@@ -673,6 +693,7 @@ const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwvxHeQ6WtMy9rq
 
 /* ─── STATE ─── */
 let records = [];
+let currentPaymentType = '';
 
 const CAT_LABEL = {
   'medical-supplies': 'Medical Supplies & Reagents',
@@ -719,6 +740,18 @@ function showToast(msg, type = 'ok') {
     : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
   el.className = 'toast show ' + type;
   setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+function setPaymentType(type, btn) {
+  currentPaymentType = type;
+  document.getElementById('f-payment-type').value = type;
+  document.querySelectorAll('.payment-type-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function buildTaggedDetails(details, paymentType) {
+  let normalized = details.replace(/^\((CASH|CHEQUE|E-WALLET)\)\s*/i, '').trim();
+  return `(${paymentType}) ${normalized}`;
 }
 
 /* ─── AUTH ─── */
@@ -886,9 +919,11 @@ function submitExpense() {
   if (!encoder)               { showToast('Please enter who encoded this.', 'err'); return; }
   if (!amount || amount <= 0) { showToast('Please enter a valid amount.', 'err'); return; }
   if (!category)              { showToast('Please select a category.', 'err'); return; }
+  if (!currentPaymentType)    { showToast('Please select a payment type.', 'err'); return; }
   if (!details)               { showToast('Please enter item / details.', 'err'); return; }
 
-  const payload = { action:'addexpense', date, encoder, amount, category, details, invoice, notes };
+  const taggedDetails = buildTaggedDetails(details, currentPaymentType);
+  const payload = { action:'addexpense', date, encoder, amount, category, details: taggedDetails, invoice, notes };
 
   const btn = document.getElementById('submit-btn');
   btn.disabled = true;
@@ -929,6 +964,9 @@ function clearForm() {
   document.getElementById('f-invoice').value = '';
   document.getElementById('f-notes').value   = '';
   // encoder + category kept for faster repeated entries
+  currentPaymentType = '';
+  document.querySelectorAll('.payment-type-btn').forEach(btn => btn.classList.remove('active'));
+  document.getElementById('f-payment-type').value = '';
 }
 </script>
 </body>
